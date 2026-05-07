@@ -6,7 +6,8 @@ const FUEL_TYPES = ['Essence', 'Diesel', 'Hybride', 'Électrique'];
 const COLORS = ['Gris Titanium', 'Blanc', 'Noir', 'Rouge', 'Bleu', 'Autre'];
 
 export default function ManualFormScreen({ navigation, route }) {
-  const { plateType } = route.params || {};
+const plateType = route?.params?.plateType || 'tunisian';
+
 
   const [selectedType, setSelectedType] = useState(plateType || 'tunisian');
   const [form, setForm] = useState({

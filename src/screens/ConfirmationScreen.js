@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ConfirmationScreen({ navigation, route }) {
-  const { form, plateType } = route.params;
+  const form = route?.params?.form || {};
+  const plateType = route?.params?.plateType || 'tunisian';
 
   const InfoRow = ({ label, value }) =>
     value ? (

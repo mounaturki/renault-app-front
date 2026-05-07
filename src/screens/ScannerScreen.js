@@ -7,13 +7,19 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+
 import { scanPlate } from '../services/api';
 
-export default function ScannerScreen({ navigation, route }) {
-  const { plateType } = route.params;
+export default function ScannerScreen({ route }) {
+  const navigation = useNavigation();
+
+  const plateType = route?.params?.plateType || 'tunisian';
+
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
   const cameraRef = useRef(null);
@@ -26,6 +32,7 @@ export default function ScannerScreen({ navigation, route }) {
         <Text style={styles.permText}>
           Accès à la caméra requis pour scanner la plaque
         </Text>
+
         <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
           <Text style={styles.permBtnText}>Autoriser la caméra</Text>
         </TouchableOpacity>
@@ -35,45 +42,77 @@ export default function ScannerScreen({ navigation, route }) {
 
   const handleCapture = async () => {
     if (!cameraRef.current || scanning) return;
+
     setScanning(true);
+
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.9,
         base64: false,
       });
+
       const result = await scanPlate(photo.uri, plateType);
+
+      console.log('Résultat OCR:', result);
+
       if (result.success) {
-        navigation.navigate('VehicleInfo', { scanResult: result, plateType });
+        navigation.navigate('VehicleInfo', {
+          scanResult: result,
+          plateType,
+        });
       } else {
         Alert.alert(
           'Plaque non reconnue',
-          result.error || 'Réessayez avec une meilleure image.',
-          [{ text: 'Réessayer', onPress: () => setScanning(false) }]
+          result.error || 'Réessayez avec une meilleure image.'
         );
+        setScanning(false);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de contacter le serveur.');
+      console.log('❌ OCR erreur:', error.response?.data || error.message);
+
+      Alert.alert(
+        'Erreur serveur',
+        JSON.stringify(error.response?.data || error.message)
+      );
+
       setScanning(false);
     }
   };
 
   const handleGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 1,
     });
+
     if (!result.canceled) {
       setScanning(true);
+
       try {
         const scanResult = await scanPlate(result.assets[0].uri, plateType);
+
+        console.log('Résultat OCR:', scanResult);
+
         if (scanResult.success) {
-          navigation.navigate('VehicleInfo', { scanResult, plateType });
+          navigation.navigate('VehicleInfo', {
+            scanResult,
+            plateType,
+          });
         } else {
-          Alert.alert('Non reconnu', scanResult.error);
+          Alert.alert(
+            'Non reconnu',
+            scanResult.error || 'Plaque non reconnue'
+          );
           setScanning(false);
         }
-      } catch {
-        Alert.alert('Erreur serveur');
+      } catch (error) {
+        console.log('❌ OCR erreur:', error.response?.data || error.message);
+
+        Alert.alert(
+          'Erreur serveur',
+          JSON.stringify(error.response?.data || error.message)
+        );
+
         setScanning(false);
       }
     }
@@ -81,38 +120,40 @@ export default function ScannerScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-
-      {/* ✅ CameraView SANS enfants */}
       <CameraView style={styles.camera} ref={cameraRef} facing="back" />
 
-      {/* ✅ Overlay EN DEHORS de CameraView */}
       <View style={styles.overlayContainer}>
         <View style={styles.topOverlay} />
+
         <View style={styles.middleRow}>
           <View style={styles.sideOverlay} />
+
           <View style={styles.scanFrame}>
             <View style={[styles.corner, styles.topLeft]} />
             <View style={[styles.corner, styles.topRight]} />
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
+
             <View style={styles.plateArea}>
               <Text style={styles.plateAreaLabel}>
                 {plateType === 'tunisian' ? '🇹🇳 Tunisien' : '🌍 Étranger'}
               </Text>
             </View>
           </View>
+
           <View style={styles.sideOverlay} />
         </View>
+
         <View style={styles.bottomOverlay}>
           <Text style={styles.hint}>Centrez la plaque dans le cadre</Text>
         </View>
       </View>
 
-      {/* Boutons */}
       <View style={styles.controls}>
         <TouchableOpacity style={styles.galleryBtn} onPress={handleGallery}>
           <Text style={styles.galleryText}>📁 Galerie</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.captureBtn}
           onPress={handleCapture}
@@ -124,6 +165,7 @@ export default function ScannerScreen({ navigation, route }) {
             <View style={styles.captureInner} />
           )}
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.manualBtn}
           onPress={() => navigation.navigate('ManualForm', { plateType })}
@@ -148,26 +190,37 @@ const FRAME_H = 100;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
 
-  // ✅ Camera prend tout l'écran
   camera: {
     ...StyleSheet.absoluteFillObject,
   },
 
-  // ✅ Overlay par-dessus la caméra
   overlayContainer: {
     ...StyleSheet.absoluteFillObject,
     bottom: 110,
   },
 
-  topOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  middleRow: { flexDirection: 'row', height: FRAME_H + 40 },
-  sideOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  topOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+
+  middleRow: {
+    flexDirection: 'row',
+    height: FRAME_H + 40,
+  },
+
+  sideOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+
   scanFrame: {
     width: FRAME_W,
     height: FRAME_H + 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   corner: {
     position: 'absolute',
     width: 20,
@@ -175,10 +228,35 @@ const styles = StyleSheet.create({
     borderColor: '#8B0000',
     borderWidth: 3,
   },
-  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
-  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
-  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
+
+  topLeft: {
+    top: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+
+  topRight: {
+    top: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+  },
+
+  bottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+  },
+
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+  },
+
   plateArea: {
     width: FRAME_W - 20,
     height: FRAME_H,
@@ -189,14 +267,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  plateAreaLabel: { color: '#fff', fontSize: 13, opacity: 0.8 },
+
+  plateAreaLabel: {
+    color: '#fff',
+    fontSize: 13,
+    opacity: 0.8,
+  },
+
   bottomOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     paddingTop: 16,
   },
-  hint: { color: '#fff', fontSize: 13, opacity: 0.8 },
+
+  hint: {
+    color: '#fff',
+    fontSize: 13,
+    opacity: 0.8,
+  },
+
   controls: {
     position: 'absolute',
     bottom: 0,
@@ -210,8 +300,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     height: 110,
   },
-  galleryBtn: { alignItems: 'center' },
-  galleryText: { color: '#fff', fontSize: 12, marginTop: 4 },
+
+  galleryBtn: {
+    alignItems: 'center',
+  },
+
+  galleryText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
+
   captureBtn: {
     width: 70,
     height: 70,
@@ -222,21 +321,37 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#fff',
   },
+
   captureInner: {
     width: 54,
     height: 54,
     borderRadius: 27,
     backgroundColor: '#fff',
   },
-  manualBtn: { alignItems: 'center' },
-  manualText: { color: '#fff', fontSize: 12, marginTop: 4 },
+
+  manualBtn: {
+    alignItems: 'center',
+  },
+
+  manualText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
+
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loadingText: { color: '#fff', marginTop: 12, fontSize: 16 },
+
+  loadingText: {
+    color: '#fff',
+    marginTop: 12,
+    fontSize: 16,
+  },
+
   permContainer: {
     flex: 1,
     alignItems: 'center',
@@ -244,17 +359,23 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: '#fff',
   },
+
   permText: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
     color: '#333',
   },
+
   permBtn: {
     backgroundColor: '#8B0000',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 10,
   },
-  permBtnText: { color: '#fff', fontWeight: 'bold' },
+
+  permBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });

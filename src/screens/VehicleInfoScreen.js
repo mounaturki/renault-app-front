@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 export default function VehicleInfoScreen({ navigation, route }) {
-  const { scanResult, plateType } = route.params;
-  const vehicle = scanResult?.vehicleInfo;
+  const scanResult = route?.params?.scanResult || {};
+  const plateType = route?.params?.plateType || 'tunisian';
+
+  const vehicle = scanResult?.vehicleInfo || {};
 
   const [form, setForm] = useState({
     plateNumber: scanResult?.plateNumber || '',
@@ -37,7 +47,6 @@ export default function VehicleInfoScreen({ navigation, route }) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Car header */}
         <View style={styles.header}>
           <Text style={styles.carEmoji}>🚗</Text>
           <View>
@@ -50,7 +59,6 @@ export default function VehicleInfoScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* Plate badge */}
         <View style={styles.plateBadge}>
           {plateType === 'tunisian' ? (
             <View style={styles.tunisianPlate}>
@@ -64,7 +72,6 @@ export default function VehicleInfoScreen({ navigation, route }) {
           )}
         </View>
 
-        {/* Registered badge */}
         {isRegistered && (
           <View style={styles.registeredBadge}>
             <Text style={styles.registeredText}>
@@ -73,9 +80,9 @@ export default function VehicleInfoScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* Confidence */}
         <View style={styles.confidenceRow}>
           <Text style={styles.confidenceLabel}>Confiance OCR</Text>
+
           <View style={styles.confidenceBar}>
             <View
               style={[
@@ -84,12 +91,12 @@ export default function VehicleInfoScreen({ navigation, route }) {
               ]}
             />
           </View>
+
           <Text style={styles.confidenceValue}>
             {Math.round(scanResult?.confidence || 0)}%
           </Text>
         </View>
 
-        {/* Tabs */}
         <View style={styles.tabs}>
           {['Clio', 'Megane', 'Duster', 'Captur'].map((m) => (
             <TouchableOpacity
@@ -112,26 +119,61 @@ export default function VehicleInfoScreen({ navigation, route }) {
           ))}
         </View>
 
-        {/* Form fields */}
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>INFORMATIONS VÉHICULE</Text>
-          <Field label="NUMÉRO DE PLAQUE" value={form.plateNumber} field="plateNumber" />
-          <Field label="COULEUR" value={form.vehicleColor} field="vehicleColor" />
-          <Field label="PUISSANCE FISCALE" value={form.horsepower} field="horsepower" />
-          <Field label="CARBURANT" value={form.fuelType} field="fuelType" />
-          <Field label="ANNÉE" value={form.vehicleYear} field="vehicleYear" />
-          <Field label="KILOMÉTRAGE" value={form.kilometrage} field="kilometrage" />
+
+          <Field
+            label="NUMÉRO DE PLAQUE"
+            value={form.plateNumber}
+            field="plateNumber"
+          />
+
+          <Field
+            label="COULEUR"
+            value={form.vehicleColor}
+            field="vehicleColor"
+          />
+
+          <Field
+            label="PUISSANCE FISCALE"
+            value={form.horsepower}
+            field="horsepower"
+          />
+
+          <Field
+            label="CARBURANT"
+            value={form.fuelType}
+            field="fuelType"
+          />
+
+          <Field
+            label="ANNÉE"
+            value={form.vehicleYear}
+            field="vehicleYear"
+          />
+
+          <Field
+            label="KILOMÉTRAGE"
+            value={form.kilometrage}
+            field="kilometrage"
+          />
         </View>
 
-        {/* VIN */}
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>NUMÉRO VIN</Text>
-          <Field label="VIN" value={form.vinNumber} field="vinNumber" />
+
+          <Field
+            label="VIN"
+            value={form.vinNumber}
+            field="vinNumber"
+          />
         </View>
 
         <TouchableOpacity
           style={styles.nextBtn}
-          onPress={() => navigation.navigate('Confirmation', { form, plateType })}
+          onPress={() =>
+            navigation.navigate('Confirmation', { form, plateType })
+          }
         >
           <Text style={styles.nextBtnText}>SUIVANT</Text>
         </TouchableOpacity>
@@ -141,7 +183,11 @@ export default function VehicleInfoScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -149,10 +195,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B0000',
     padding: 20,
   },
-  carEmoji: { fontSize: 50 },
-  brand: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  year: { color: '#ffcdd2', fontSize: 13 },
-  plateBadge: { alignItems: 'center', paddingVertical: 16 },
+
+  carEmoji: {
+    fontSize: 50,
+  },
+
+  brand: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+
+  year: {
+    color: '#ffcdd2',
+    fontSize: 13,
+  },
+
+  plateBadge: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+
   tunisianPlate: {
     backgroundColor: '#fff',
     borderWidth: 2,
@@ -164,6 +227,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
+
   foreignPlate: {
     backgroundColor: '#fff',
     borderWidth: 2,
@@ -172,8 +236,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 8,
   },
-  plateText: { fontSize: 22, fontWeight: 'bold', letterSpacing: 2, color: '#111' },
-  plateTN: { fontSize: 13, color: '#8B0000' },
+
+  plateText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    color: '#111',
+  },
+
+  plateTN: {
+    fontSize: 13,
+    color: '#8B0000',
+  },
+
   registeredBadge: {
     marginHorizontal: 16,
     backgroundColor: '#fff3cd',
@@ -181,7 +256,12 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
-  registeredText: { color: '#856404', fontSize: 13 },
+
+  registeredText: {
+    color: '#856404',
+    fontSize: 13,
+  },
+
   confidenceRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -189,7 +269,13 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 12,
   },
-  confidenceLabel: { fontSize: 12, color: '#666', width: 80 },
+
+  confidenceLabel: {
+    fontSize: 12,
+    color: '#666',
+    width: 80,
+  },
+
   confidenceBar: {
     flex: 1,
     height: 6,
@@ -197,14 +283,27 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     overflow: 'hidden',
   },
-  confidenceFill: { height: 6, backgroundColor: '#8B0000', borderRadius: 3 },
-  confidenceValue: { fontSize: 12, fontWeight: 'bold', color: '#8B0000', width: 36 },
+
+  confidenceFill: {
+    height: 6,
+    backgroundColor: '#8B0000',
+    borderRadius: 3,
+  },
+
+  confidenceValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#8B0000',
+    width: 36,
+  },
+
   tabs: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     gap: 8,
     marginBottom: 12,
   },
+
   tab: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -213,9 +312,22 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     backgroundColor: '#fff',
   },
-  tabActive: { backgroundColor: '#8B0000', borderColor: '#8B0000' },
-  tabText: { fontSize: 13, color: '#555' },
-  tabTextActive: { color: '#fff', fontWeight: '600' },
+
+  tabActive: {
+    backgroundColor: '#8B0000',
+    borderColor: '#8B0000',
+  },
+
+  tabText: {
+    fontSize: 13,
+    color: '#555',
+  },
+
+  tabTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
   formCard: {
     marginHorizontal: 16,
     marginBottom: 12,
@@ -224,6 +336,7 @@ const styles = StyleSheet.create({
     padding: 16,
     elevation: 1,
   },
+
   formTitle: {
     fontSize: 11,
     color: '#8B0000',
@@ -231,8 +344,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 12,
   },
-  field: { marginBottom: 12 },
-  fieldLabel: { fontSize: 11, color: '#888', marginBottom: 4, letterSpacing: 0.5 },
+
+  field: {
+    marginBottom: 12,
+  },
+
+  fieldLabel: {
+    fontSize: 11,
+    color: '#888',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+
   fieldInput: {
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -240,7 +363,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
   },
-  fieldInputDisabled: { color: '#999' },
+
+  fieldInputDisabled: {
+    color: '#999',
+  },
+
   nextBtn: {
     margin: 16,
     backgroundColor: '#8B0000',
@@ -249,6 +376,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+
   nextBtnText: {
     color: '#fff',
     fontWeight: 'bold',
