@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,12 +14,25 @@
     "ios": {
       "supportsTablet": true
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Accès caméra pour scanner la plaque du véhicule"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Accès galerie pour choisir une image de plaque"
+        }
+      ]
+    ],
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
